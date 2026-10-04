@@ -1,192 +1,194 @@
-# FraudShield
+<!-- Template note: same layout as VIRO_README.md. Search for "EDIT:" for the spots that need your repo-specific details. -->
 
-Explainable, cost-sensitive credit card fraud detection — a research/portfolio project built on
-the public [Kaggle Credit Card Fraud Detection dataset](https://www.kaggle.com/mlg-ulb/creditcardfraud)
-(284,807 European cardholder transactions, September 2013).
+<div align="center">
 
-**This is not a real banking production system.** It demonstrates a full pipeline — imbalance-aware
-ML, cost-sensitive threshold optimization, SHAP explainability, and a production-style web
-application — built around a genuinely trained model, with a FastAPI backend that loads real
-saved artifacts and never retrains, and a Next.js frontend that never fabricates results.
+<img src="https://capsule-render.vercel.app/api?type=waving&color=0:050816,50:0E7490,100:7E22CE&height=190&section=header&text=FraudShield&fontSize=58&fontColor=FFFFFF&animation=fadeIn&fontAlignY=36&desc=Explainable%20Cost-Sensitive%20Fraud%20Detection%20%C2%B7%20SHAP%20%C2%B7%20FastAPI&descAlignY=58&descSize=16" width="100%" alt="FraudShield banner" />
 
-## Architecture
+<a href="https://fraudshield-sable.vercel.app">
+  <img src="https://readme-typing-svg.demolab.com?font=JetBrains+Mono&weight=600&size=21&duration=3000&pause=900&color=22D3EE&center=true&vCenter=true&width=900&lines=Fraud+detection+on+284%2C807+transactions+(~0.17%25+fraud);Leakage-safe+evaluation+%2B+threshold+optimization;PR-AUC+0.803+%C2%B7+86.9%25+precision+%C2%B7+76.8%25+recall;Every+prediction+explained+with+SHAP" alt="Typing SVG" />
+</a>
 
-```
-                Next.js Frontend (Vercel)
-   Dashboard · Predict · Batch · Explainability · Analytics · Model · Docs
-                          │
-                    HTTPS REST API
-                          │
-                          ▼
-              Python FastAPI Inference Service
-   validation · preprocessing · model loading · prediction · risk · SHAP
-                          │
-                          ▼
-                 FraudShield Artifacts
-   random_forest.pkl · preprocessor.pkl · model_metadata.json · feature_names.json
-```
+<br/>
 
-The backend loads the trained artifacts **once** at process startup and holds them in memory —
-it never retrains, never refits the preprocessor, and never changes the decision threshold.
+<a href="https://fraudshield-sable.vercel.app"><img src="https://img.shields.io/badge/%F0%9F%8C%90%20Live%20demo-fraudshield-22D3EE?style=for-the-badge&labelColor=050816" alt="Live demo" /></a>
+<a href="https://fraudshield-sable.vercel.app/research"><img src="https://img.shields.io/badge/%F0%9F%93%84%20Research-page-7E22CE?style=for-the-badge&labelColor=050816" alt="Research page" /></a>
+<a href="https://github.com/AsjidSiddique/Fraudshield"><img src="https://img.shields.io/badge/Source-GitHub-181717?style=for-the-badge&logo=github&logoColor=white" alt="Source" /></a>
+<a href="https://asjid-siddique-chi.vercel.app/projects/fraudshield"><img src="https://img.shields.io/badge/Portfolio-case%20study-050816?style=for-the-badge&logo=vercel&logoColor=22D3EE" alt="Portfolio case study" /></a>
 
-## Features
+<br/>
 
-- Cost-sensitive fraud detection with an explicitly documented, configurable business-cost model
-- Class-imbalance-aware evaluation (PR-AUC prioritized over accuracy)
-- Random Forest (selected final model; Logistic Regression and a PyTorch MLP were also evaluated
-  during model development — see the notebook)
-- SHAP explainability for individual predictions
-- Cost-optimized decision threshold (not a default 0.5)
-- Production inference service (`/api/predict`) that only ever loads saved artifacts
-- Batch CSV prediction (`/api/predict/batch`) with validation, pagination, search, filtering
-- Next.js/TypeScript frontend with a dark fintech-style UI
-- FastAPI backend with Pydantic validation, CORS, and no leaked stack traces
+<img src="https://skillicons.dev/icons?i=python,sklearn,pytorch,numpy,pandas,fastapi,nextjs,vercel,git&theme=dark" alt="Tools" />
+<br/>
+<img src="https://img.shields.io/badge/SHAP-8957E5?style=flat-square" alt="SHAP" />
+<img src="https://img.shields.io/badge/Random_Forest-0E7490?style=flat-square" alt="Random Forest" />
+<img src="https://img.shields.io/badge/PyTorch_MLP-EE4C2C?style=flat-square&logo=pytorch&logoColor=white" alt="PyTorch MLP" />
+<img src="https://img.shields.io/github/last-commit/AsjidSiddique/Fraudshield?style=flat-square&color=0E7490" alt="Last commit" />
 
-## ML Methodology (summary — see `docs/model.md` for full detail)
+</div>
 
-- **Dataset:** 284,807 transactions, ~0.17% fraud. `Time`, `V1`-`V28` (PCA-anonymized), `Amount`.
-- **Preprocessing:** mean-impute + StandardScaler on `Time`/`V1`-`V28`; median-impute + log1p +
-  StandardScaler on `Amount`. Fit only on training data.
-- **Imbalance handling:** SMOTE (training data only) and class-weighting were compared during
-  development; see the training notebook for the full comparison.
-- **Final model:** Random Forest, selected by test-set PR-AUC (not accuracy), with Business Cost
-  as a tie-breaker.
-- **Threshold:** chosen on a held-out validation set by minimizing an illustrative business cost
-  (`FN × COST_FN + FP × COST_FP`), never on the test set.
-- **Explainability:** SHAP `TreeExplainer` on the Random Forest. SHAP values describe model
-  behavior, not causation, and `V1`-`V28` carry no disclosed real-world meaning.
+---
 
-## Metrics (from the bundled `model_metadata.json` / `results/model_comparison.csv`)
+## 🧭 About
 
-See `/dashboard` and `/analytics` in the running app, or `backend/models/model_metadata.json`
-directly, for the exact figures — they are read live from the artifacts, not hardcoded anywhere
-in this README, so they stay accurate as the model is retrained in the future.
+**FraudShield** is an end-to-end machine-learning system for **highly imbalanced fraud detection**. Instead of chasing accuracy (meaningless when only ~0.17% of transactions are fraud), it focuses on what matters: **leak-free evaluation, a principled decision threshold, and explanations for every prediction.**
 
-## API Documentation
+---
 
-See [`docs/api.md`](docs/api.md) and the running service's interactive docs at `/docs`
-(FastAPI's built-in Swagger UI).
+## 🏆 Results (untouched final test set)
 
-## Local Setup
+<div align="center">
 
-### Backend
+| Transactions | Fraud rate | PR-AUC | Precision | Recall | F1 |
+|:-:|:-:|:-:|:-:|:-:|:-:|
+| **284,807** | **~0.17%** | **0.803** | **86.9%** | **76.8%** | **81.6%** |
 
-```bash
-cd backend
-python -m venv venv
-source venv/bin/activate        # Windows: venv\Scripts\activate
-pip install -r requirements.txt
-uvicorn app.main:app --reload --port 8000
+</div>
+
+> Selected model: **Random Forest**. Precision / recall / F1 are measured at the threshold optimized on the **validation** set, then applied once to the final test set.
+
+---
+
+## ✨ Highlights
+
+- 🧪 **No data leakage** — preprocessing is fitted on the training split only; the final test set is never touched during tuning
+- ⚖️ **Right metrics for imbalance** — ROC-AUC, **PR-AUC**, precision, recall and F1 (not accuracy)
+- 🎚️ **Threshold optimization** — the decision threshold is chosen on validation data, not left at an arbitrary 0.5
+- 🤖 **Model comparison** — Logistic Regression · Random Forest · HistGradientBoosting · PyTorch MLP
+- 🔍 **Explainable** — SHAP shows which features push each transaction toward fraud
+- 🌐 **Deployable** — FastAPI inference service with a Next.js front end
+
+---
+
+## 🏗️ Pipeline
+
+```mermaid
+flowchart LR
+    A[(284,807<br/>transactions)] --> B[Train / val / test<br/>split]
+    B --> C[Train-only<br/>preprocessing]
+    C --> D[Train 4 models<br/>LR · RF · HGB · MLP]
+    D --> E[Compare on validation<br/>ROC-AUC · PR-AUC · F1]
+    E --> F[Pick Random Forest<br/>PR-AUC 0.803]
+    F --> G[Optimize threshold<br/>on validation]
+    G --> H{{One-time evaluation<br/>on untouched test set}}
+    F --> I[SHAP<br/>explanations]
+    H --> J[FastAPI<br/>inference]
+    I --> J
+    J --> K([Next.js demo])
 ```
 
-Verify: `curl http://localhost:8000/health` should report `"model_loaded": true`.
+---
 
-Run tests (including the required model integration test):
+## 🤖 Models compared
 
-```bash
-pytest tests/ -v -s
-```
+| Model | Family | Why it's in the comparison | Outcome |
+|---|---|---|---|
+| **Logistic Regression** | Linear | Simple, interpretable baseline | Compared |
+| **Random Forest** | Tree ensemble (bagging) | Strong on tabular, imbalanced data | ✅ **Selected** — PR-AUC **0.803** · precision **86.9%** · recall **76.8%** · F1 **81.6%** |
+| **HistGradientBoosting** | Gradient-boosted trees | Modern boosted-tree contender | Compared |
+| **PyTorch MLP** | Neural network | Tests whether deep learning beats trees on this data | Compared |
 
-### Frontend
+**Evaluation metrics:** ROC-AUC · **PR-AUC** · precision · recall · F1 · cost-sensitive evaluation  
+**Explainability:** **SHAP** on the selected model  
+**Serving:** FastAPI inference service
 
-```bash
-cd frontend
-cp .env.example .env.local     # then edit NEXT_PUBLIC_API_URL if needed
-npm install
-npm run dev
-```
+> Full per-model numbers are on the [research page](https://fraudshield-sable.vercel.app/research). <!-- EDIT: add the other models' PR-AUC values here if you want them in the README -->
 
-Visit `http://localhost:3000`.
+---
 
-## Environment Variables
+## 🧰 Tech stack
 
-**Backend** (all optional; sensible defaults shown):
-
-| Variable | Default | Purpose |
-|---|---|---|
-| `FRAUDSHIELD_MODELS_DIR` | `backend/models` | Where artifacts are loaded from |
-| `FRAUDSHIELD_ALLOWED_ORIGINS` | `http://localhost:3000` | Comma-separated CORS origins |
-| `FRAUDSHIELD_MAX_BATCH_ROWS` | `5000` | Max rows accepted per batch CSV |
-| `FRAUDSHIELD_MAX_UPLOAD_BYTES` | `10485760` (10MB) | Max CSV upload size |
-| `FRAUDSHIELD_SHAP_ENABLED` | `true` | Toggle SHAP explainability |
-| `FRAUDSHIELD_ENV` | `development` | Environment label |
-
-**Frontend** (`.env.example`):
-
-| Variable | Purpose |
+| Area | Tools |
 |---|---|
-| `NEXT_PUBLIC_API_URL` | Base URL of the deployed FastAPI service (no trailing slash) |
+| Language | Python |
+| Classical ML | Scikit-learn (Logistic Regression, Random Forest, HistGradientBoosting) |
+| Deep learning | PyTorch (MLP) |
+| Data | Pandas · NumPy |
+| Explainability | SHAP |
+| Serving | FastAPI |
+| Front end | Next.js · Vercel |
 
-## Deployment
+---
 
-### Backend
-
-```bash
-cd backend
-docker build -t fraudshield-backend .
-docker run -p 8000:8000 -e FRAUDSHIELD_ALLOWED_ORIGINS=https://your-frontend.vercel.app fraudshield-backend
-```
-
-Deploy the image to any platform that runs a persistent container (Render, Railway, Fly.io, a
-VM, AWS/GCP/Azure container services, etc.) — **not** Vercel's serverless functions, which are
-not suited to holding a loaded scikit-learn model in memory. See `docs/deployment.md`.
-
-### Frontend (Vercel)
-
-1. Push this repository to GitHub.
-2. Import the `frontend/` directory into Vercel as a new project.
-3. Set `NEXT_PUBLIC_API_URL` to your deployed backend's URL in Vercel's project settings.
-4. Deploy.
-5. Confirm `/health` on the backend responds, then confirm a prediction from `/predict` on the
-   deployed frontend, then confirm batch upload on `/batch`.
-
-## GitHub Push Commands
+## 🚀 Getting started
 
 ```bash
-git init
-git add .
-git commit -m "FraudShield: explainable, cost-sensitive fraud detection"
-git branch -M main
-git remote add origin https://github.com/<your-username>/fraudshield.git
-git push -u origin main
+git clone https://github.com/AsjidSiddique/Fraudshield.git
+cd Fraudshield
+python -m venv .venv && source .venv/bin/activate     # Windows: .venv\Scripts\activate
+pip install -r requirements.txt                       # EDIT: your requirements file
 ```
 
-## Known Limitations
+```bash
+# EDIT: replace with your real entry points / notebooks
+python scripts/train.py            # train + compare models
+python scripts/evaluate.py         # final test-set metrics
+uvicorn api.main:app --reload      # FastAPI inference service
+```
 
-- Dataset is a static, historical (Sept 2013) snapshot; real fraud patterns drift over time.
-- `V1`-`V28` are anonymized PCA-derived features with no disclosed real-world meaning.
-- `COST_FN`/`COST_FP` and the resulting threshold are illustrative business assumptions, not
-  verified figures from a real financial institution.
-- The bundled sample artifacts do not include a real fraud example (the small sampled test set
-  happened to contain only legitimate transactions) — the "Try Fraud Example" button is disabled
-  rather than fabricating one.
-- `scikit-learn` is pinned to `1.6.1` in `backend/requirements.txt` because the bundled
-  `preprocessor.pkl` fails to load under `scikit-learn >= 1.8` (a breaking internal
-  `ColumnTransformer` change). Do not upgrade without re-running the integration test.
-- Not verified as production-ready for real banking systems without further validation,
-  monitoring, and periodic retraining on live data.
+> 📦 **Data:** place the transactions CSV at `data/` — <!-- EDIT: add dataset name + link/licence -->
 
-## Security Notes
+---
 
-- All prediction endpoints validate input strictly via Pydantic (`extra="forbid"`, typed floats,
-  non-negative `Amount`) — malformed requests are rejected before reaching the model.
-- Batch CSV uploads are size- and row-limited (`FRAUDSHIELD_MAX_UPLOAD_BYTES`,
-  `FRAUDSHIELD_MAX_BATCH_ROWS`) and column/type-validated before any inference is attempted.
-- Unhandled exceptions return a generic `500` — no stack traces or filesystem paths are ever
-  returned to the client (see `app/main.py`'s global exception handler).
-- Model file paths are never exposed to the frontend; the frontend only ever talks to the REST API.
-- CORS is restricted via `FRAUDSHIELD_ALLOWED_ORIGINS` — set this to your real frontend domain
-  in production, not `*`.
+## 🗂️ Project structure
 
-## Future Work
+<!-- EDIT: paste the output of `tree -L 2 -I "node_modules|.venv|__pycache__"` -->
 
-- Feature-drift monitoring against live transaction data.
-- A scheduled retraining/validation pipeline rather than a static artifact.
-- Authentication/rate-limiting on the inference API for a multi-tenant deployment.
-- Persisting and serving the notebook's saved figures (ROC/PR/confusion-matrix PNGs) directly
-  from the API for a fully static audit trail alongside the live Recharts visualizations.
+```text
+Fraudshield/
+├── data/          # dataset (not committed)
+├── src/           # preprocessing, models, evaluation, SHAP
+├── api/           # FastAPI service
+├── web/           # Next.js front end
+└── docs/          # figures and results
+```
 
-## License
+---
 
-This project is provided for educational/portfolio purposes. The underlying dataset is subject
-to its own [Kaggle license terms](https://www.kaggle.com/mlg-ulb/creditcardfraud).
+## ⚠️ Notes & limitations
+
+- This is a **research / portfolio project**: the dataset and cost assumptions are **illustrative**, not a real banking production system.
+- Features in this kind of dataset are anonymized, so SHAP explanations show *which* features matter, not human-readable business reasons.
+
+---
+
+## 🔗 Links
+
+| | |
+|---|---|
+| **🌐 Live demo** | [fraudshield-sable.vercel.app](https://fraudshield-sable.vercel.app) |
+| **💻 Source code** | [github.com/AsjidSiddique/Fraudshield](https://github.com/AsjidSiddique/Fraudshield) |
+| **📄 Research page** | [fraudshield-sable.vercel.app/research](https://fraudshield-sable.vercel.app/research) |
+| **🗂️ Portfolio case study** | [asjid-siddique-chi.vercel.app/projects/fraudshield](https://asjid-siddique-chi.vercel.app/projects/fraudshield) |
+| **🧑‍💻 My portfolio** | [asjid-siddique-chi.vercel.app](https://asjid-siddique-chi.vercel.app) |
+| **📑 Resume** | [asjid-siddique-chi.vercel.app/resume](https://asjid-siddique-chi.vercel.app/resume) |
+| **💼 LinkedIn** | [linkedin.com/in/asjidsiddique469](https://www.linkedin.com/in/asjidsiddique469/) |
+| **🐙 GitHub profile** | [github.com/AsjidSiddique](https://github.com/AsjidSiddique) |
+
+### 🚀 More projects
+
+| Project | What it is | Source | Portfolio |
+|---|---|---|---|
+| **PCBDefect-X** | Deep-learning PCB defect detection | [GitHub](https://github.com/AsjidSiddique/PCBDefect-X) | [Case study](https://asjid-siddique-chi.vercel.app/projects/pcbdefect-x) |
+| **Viro.pk** | Production e-commerce platform | [GitHub](https://github.com/AsjidSiddique/VIRO) | [Case study](https://asjid-siddique-chi.vercel.app/projects/viro) |
+| **OS Kernel Simulator** | CPU scheduling & paging simulator | [GitHub](https://github.com/AsjidSiddique/OS-Kernel-Simulator) | [Case study](https://asjid-siddique-chi.vercel.app/projects/os-kernel-simulator) |
+
+---
+
+## 👨‍💻 Author
+
+<div align="center">
+
+**Asjid Siddique** — Software Engineering student @ NUST · Building toward AI/ML research
+
+<a href="https://asjid-siddique-chi.vercel.app"><img src="https://img.shields.io/badge/Portfolio-050816?style=for-the-badge&logo=vercel&logoColor=22D3EE" alt="Portfolio" /></a>
+<a href="https://github.com/AsjidSiddique"><img src="https://img.shields.io/badge/GitHub-181717?style=for-the-badge&logo=github&logoColor=white" alt="GitHub" /></a>
+<a href="https://www.linkedin.com/in/asjidsiddique469/"><img src="https://img.shields.io/badge/LinkedIn-0A66C2?style=for-the-badge&logo=linkedin&logoColor=white" alt="LinkedIn" /></a>
+<a href="mailto:asjadsaddique4@gmail.com"><img src="https://img.shields.io/badge/Email-EA4335?style=for-the-badge&logo=gmail&logoColor=white" alt="Email" /></a>
+
+<br/><br/>
+
+⭐ If you find this useful, a star on the repo means a lot.
+
+<img src="https://capsule-render.vercel.app/api?type=waving&color=0:7E22CE,50:0E7490,100:050816&height=110&section=footer" width="100%" alt="footer" />
+
+</div>
